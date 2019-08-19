@@ -26,14 +26,14 @@ public class Msg {
     public static Msg success(){
         Msg result = new Msg();
         result.setCode(1);
-        result.setMsg("成功");
+        result.setMsg("操作成功");
         return result;
     }
 
     public static Msg fail(){
         Msg result = new Msg();
         result.setCode(0);
-        result.setMsg("失败");
+        result.setMsg("操作失败");
         return result;
     }
 

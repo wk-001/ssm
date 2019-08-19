@@ -4,6 +4,7 @@
     String path = request.getContextPath();
     String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
 %>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
     <title>Title</title>
@@ -13,11 +14,14 @@
     <script type="text/javascript" src="<%=basePath%>static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
 </head>
 <script type="text/javascript">
+
+    var lastPages;
     /*页面加载完成后发送ajax请求获取数据*/
     $(function () {
         to_page(1);
     });
-    
+
+    //点击页码跳转页面
     function to_page(pn) {
         $("#emps_table tbody").empty();
         $("#page_info_area").empty();
@@ -63,6 +67,7 @@
     //分页信息
     function build_page_info(data) {
         $("#page_info_area").append("当前第"+data.extend.page.pageNum+"页，共"+data.extend.page.pages+"页，总"+data.extend.page.total+"条记录")
+        lastPages = data.extend.page.pages+1;
     }
     
     //分页条
@@ -112,14 +117,128 @@
         var nav = $("<nav></nav>").append(ul);
         nav.appendTo("#page_nav_area");
     }
-    
+
+    //点击新增按钮弹出模态框
     function openAddModel() {
+        //清空原数据
+        /*$("#empName").val("");
+        $("#email").val("");*/
+        //转成dom对象再调用方法，否则无效
+        $("#empForm")[0].reset();
+
+        //发送ajax请求查询部门信息，添加到下拉列表
+        getDepts();
+
+        //模态框
         $('#empAddModel').modal({
-            keyboard: false,
-            backdrop: 'static'
+            keyboard: false,    //禁止按esc关闭模态框
+            backdrop: 'static'  //点击模态框以外的区域不会关闭模态框
         });
     }
 
+    //查询所有部门信息并显示在下拉列表
+    function getDepts() {
+        $("#did").empty();
+        $.get(
+            "<%=basePath%>depts",
+            function (data) {
+                $.each(data.extend.depts,function (index, item) {
+                    var sel = $("<option></option>").append(item.deptName).val(item.id);
+                    sel.appendTo("#did");
+                })
+            }
+        )
+    }
+
+    //添加员工
+    function saveEmp() {
+        //数据校验
+        if(!checkUser()){
+            return false;
+        }
+        if(!checkEmail()){
+            return false;
+        }
+        $.post(
+            "<%=basePath%>emp",
+            $("#empForm").serialize(),
+            function (data) {
+                if(data.code==1){
+                    //保存成功后关闭模态框
+                    $('#empAddModel').modal('hide')
+                    //添加成功后跳转到最后一页显示最新添加的数据，发送ajax请求显示最后一页即可
+                    to_page(lastPages);
+                }
+                alert(data.msg);
+            }
+        )
+    }
+
+    //数据校验提示
+    function validate_msg(ele, status, msg) {
+        //清除之前的class
+        $("#"+ele).parent().removeClass("has-success has-error");
+        $("#"+ele).next("span").text("");
+        if("success"==status){
+            //输入框变红色
+            $("#"+ele).parent().addClass("has-success");
+            //输入框后面的span设置值
+            $("#"+ele).next("span").text(msg);
+        }else if("error"==status){
+            //输入框变绿色
+            $("#"+ele).parent().addClass("has-error");
+            //输入框后面的span设置值
+            $("#"+ele).next("span").text(msg);
+        }
+    }
+
+    //检查用户名格式是否符合，是否重复
+    function checkUser() {
+        var empName = $("#empName").val();
+        var pattern = /(^[a-zA-Z0-9_-]{3,16}$)|(^[\u4e00-\u9fa5]{2,4})/;
+        if(!pattern.test(empName)){
+            validate_msg("empName", "error", "用户名可以是2-4位中文或3-16位英文和数字的组合");
+            return false;
+        }else{
+            $.get(
+                "<%=basePath%>checkData",
+                {name:empName},
+                function (data) {
+                    if(data){
+                        validate_msg("empName", "success", "可以使用的用户名");
+                        return true;
+                    }else {
+                        validate_msg("empName", "error","用户名已存在");
+                        return false;
+                    }
+                }
+            )
+        }
+    }
+
+    //检查邮箱格式是否符合，是否重复
+    function checkEmail() {
+        var ePattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+        var email = $("#email").val();
+        if(!ePattern.test(email)){
+            validate_msg("email", "error", "请输入正确的邮箱格式");
+            return false;
+        }else{
+            $.get(
+                "<%=basePath%>checkData",
+                {email:email},
+                function (data) {
+                    if(data){
+                        validate_msg("email", "success", "可以使用的邮箱");
+                        return true;
+                    }else {
+                        validate_msg("email", "error","邮箱已存在");
+                        return false;
+                    }
+                }
+            )
+        }
+    }
 </script>
 <body>
 
@@ -131,6 +250,7 @@
             <h1>SSM-CRUD</h1>
         </div>
     </div>
+
     <%--操作按钮--%>
     <div class="row">
         <div class="col-md-4 col-md-offset-8"> <%--div占4列，偏移8列--%>
@@ -138,6 +258,7 @@
             <button class="btn btn-danger">删除</button>
         </div>
     </div>
+
     <%--表格--%>
     <div class="row">
         <div class="col-md-12">
@@ -152,24 +273,19 @@
                         <th>operate</th>
                     </tr>
                 </thead>
-                <tbody>
 
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
+
     <%--分页--%>
     <div class="row">
-        <div class="col-md-6" id="page_info_area">
+        <div class="col-md-6" id="page_info_area"></div>
 
-        </div>
-        <div class="col-md-6" id="page_nav_area">
-
-        </div>
-
+        <div class="col-md-6" id="page_nav_area"></div>
     </div>
 </div>
-
 
 <!-- 添加员工模态框 -->
 <div class="modal fade" id="empAddModel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -180,18 +296,20 @@
                 <h4 class="modal-title" id="myModalLabel">添加员工</h4>
             </div>
             <div class="modal-body">
-                <form class="form-horizontal">
+                <form class="form-horizontal" id="empForm">
                     <div class="form-group">
                         <label class="col-sm-4 control-label">EmpName</label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" id="empName" name="name" placeholder="tom">
+                            <input type="text" class="form-control" id="empName" name="name" placeholder="tom" onblur="checkUser()">
+                            <span class="help-block"></span>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="col-sm-4 control-label">Email</label>
                         <div class="col-sm-6">
-                            <input type="email" class="form-control" id="email" name="email" placeholder="abc@qq.com">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="abc@qq.com" onblur="checkEmail()">
+                            <span class="help-block"></span>
                         </div>
                     </div>
 
@@ -207,13 +325,10 @@
                         </div>
                     </div>
 
-
                     <div class="form-group">
                         <label class="col-sm-4 control-label">Department</label>
                         <div class="col-sm-6">
-                            <select class="form-control" name="dId">
-                                <option value="0">---choose---</option>
-                            </select>
+                            <select class="form-control" name="dId" id="did"></select>
                         </div>
                     </div>
 
@@ -221,7 +336,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-primary" onclick="saveEmp()">保存</button>
             </div>
         </div>
     </div>
