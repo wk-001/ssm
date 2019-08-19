@@ -118,13 +118,18 @@
         nav.appendTo("#page_nav_area");
     }
 
+    //清空表单数据及class
+    function reset_form(ele){
+        //转成dom对象再调用方法，否则无效
+        $(ele)[0].reset();
+        //清空表单样式
+        $(ele).find("*").removeClass("has-success has-error");
+        $(ele).find(".help-block").text("");
+    }
+
     //点击新增按钮弹出模态框
     function openAddModel() {
-        //清空原数据
-        /*$("#empName").val("");
-        $("#email").val("");*/
-        //转成dom对象再调用方法，否则无效
-        $("#empForm")[0].reset();
+        reset_form("#empForm");
 
         //发送ajax请求查询部门信息，添加到下拉列表
         getDepts();
@@ -153,10 +158,7 @@
     //添加员工
     function saveEmp() {
         //数据校验
-        if(!checkUser()){
-            return false;
-        }
-        if(!checkEmail()){
+        if(!(checkUser()&&checkEmail())){
             return false;
         }
         $.post(
@@ -176,69 +178,81 @@
 
     //数据校验提示
     function validate_msg(ele, status, msg) {
+        var eles = "#"+ele;
         //清除之前的class
-        $("#"+ele).parent().removeClass("has-success has-error");
-        $("#"+ele).next("span").text("");
-        if("success"==status){
+        $(eles).parent().removeClass("has-success has-error");
+        $(eles).next("span").text("");
+        if("success"===status){
             //输入框变红色
-            $("#"+ele).parent().addClass("has-success");
+            $(eles).parent().addClass("has-success");
             //输入框后面的span设置值
-            $("#"+ele).next("span").text(msg);
-        }else if("error"==status){
+            $(eles).next("span").text(msg);
+        }else if("error"===status){
             //输入框变绿色
-            $("#"+ele).parent().addClass("has-error");
+            $(eles).parent().addClass("has-error");
             //输入框后面的span设置值
-            $("#"+ele).next("span").text(msg);
+            $(eles).next("span").text(msg);
         }
     }
 
     //检查用户名格式是否符合，是否重复
     function checkUser() {
+        var result;
         var empName = $("#empName").val();
         var pattern = /(^[a-zA-Z0-9_-]{3,16}$)|(^[\u4e00-\u9fa5]{2,4})/;
         if(!pattern.test(empName)){
             validate_msg("empName", "error", "用户名可以是2-4位中文或3-16位英文和数字的组合");
             return false;
         }else{
-            $.get(
-                "<%=basePath%>checkData",
-                {name:empName},
-                function (data) {
+            $.ajax({
+                url:"<%=basePath%>checkData",
+                type:"get",
+                async:false,
+                data:{name:empName},
+                dataType:'json' ,  // 返回json格式类型
+                success:function(data) {
                     if(data){
                         validate_msg("empName", "success", "可以使用的用户名");
-                        return true;
+                        result = true;
                     }else {
                         validate_msg("empName", "error","用户名已存在");
-                        return false;
+                        result = false;
                     }
                 }
-            )
+            });
         }
+        return result;
     }
 
     //检查邮箱格式是否符合，是否重复
     function checkEmail() {
+        var result;
         var ePattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
         var email = $("#email").val();
         if(!ePattern.test(email)){
             validate_msg("email", "error", "请输入正确的邮箱格式");
             return false;
         }else{
-            $.get(
-                "<%=basePath%>checkData",
-                {email:email},
-                function (data) {
+            $.ajax({
+                url:"<%=basePath%>checkData",
+                type:"get",
+                async:false,
+                data:{email:email},
+                dataType:'json' ,  // 返回json格式类型
+                success:function(data) {
                     if(data){
                         validate_msg("email", "success", "可以使用的邮箱");
-                        return true;
+                        result = true;
                     }else {
                         validate_msg("email", "error","邮箱已存在");
-                        return false;
+                        result = false;
                     }
                 }
-            )
+            });
         }
+        return result;
     }
+    
 </script>
 <body>
 
@@ -300,7 +314,7 @@
                     <div class="form-group">
                         <label class="col-sm-4 control-label">EmpName</label>
                         <div class="col-sm-6">
-                            <input type="text" class="form-control" id="empName" name="name" placeholder="tom" onblur="checkUser()">
+                            <input type="text" class="form-control" id="empName" name="name" placeholder="tom" onchange="checkUser()">
                             <span class="help-block"></span>
                         </div>
                     </div>
@@ -308,7 +322,7 @@
                     <div class="form-group">
                         <label class="col-sm-4 control-label">Email</label>
                         <div class="col-sm-6">
-                            <input type="email" class="form-control" id="email" name="email" placeholder="abc@qq.com" onblur="checkEmail()">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="abc@qq.com" onchange="checkEmail()">
                             <span class="help-block"></span>
                         </div>
                     </div>
