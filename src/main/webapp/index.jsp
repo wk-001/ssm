@@ -82,8 +82,6 @@
             })
         }
 
-
-
         if(data.extend.page.hasNextPage==true){
             var nextPage = $("<li></li>").append($("<a></a>").append("&raquo;"));
             var lastPage = $("<li></li>").append($("<a></a>").append("尾页"));
@@ -96,8 +94,6 @@
                 to_page(data.extend.page.pages);
             })
         }
-
-
 
         //首页和前一页
         ul.append(firstPage).append(prePage);
@@ -116,6 +112,14 @@
         var nav = $("<nav></nav>").append(ul);
         nav.appendTo("#page_nav_area");
     }
+    
+    function openAddModel() {
+        $('#empAddModel').modal({
+            keyboard: false,
+            backdrop: 'static'
+        });
+    }
+
 </script>
 <body>
 
@@ -130,7 +134,7 @@
     <%--操作按钮--%>
     <div class="row">
         <div class="col-md-4 col-md-offset-8"> <%--div占4列，偏移8列--%>
-            <button class="btn btn-primary">新增</button>
+            <button class="btn btn-primary" onclick="openAddModel()">新增</button>
             <button class="btn btn-danger">删除</button>
         </div>
     </div>
@@ -166,6 +170,62 @@
     </div>
 </div>
 
+
+<!-- 添加员工模态框 -->
+<div class="modal fade" id="empAddModel" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">添加员工</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">EmpName</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" id="empName" name="name" placeholder="tom">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Email</label>
+                        <div class="col-sm-6">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="abc@qq.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Gender</label>
+                        <div class="col-sm-6">
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender1" value="1" checked> male
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender2" value="0"> female
+                            </label>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Department</label>
+                        <div class="col-sm-6">
+                            <select class="form-control" name="dId">
+                                <option value="0">---choose---</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 
 
