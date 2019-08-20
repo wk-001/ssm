@@ -5,10 +5,15 @@ import com.github.pagehelper.PageInfo;
 import com.wk.pojo.Employee;
 import com.wk.pojo.Msg;
 import com.wk.service.EmployeeService;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class EmployeeController {
@@ -17,24 +22,64 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     /**
+     * 更新员工信息
+     * @param employee
+     * @return
+     */
+    @PutMapping("emp/{id}")
+    public Msg updEmp(Employee employee){
+        System.out.println("employee = " + employee);
+        Msg msg = employeeService.updEmp(employee);
+        return msg;
+    }
+
+    /**
+     * 根据ID查询员工信息
+     * @param id
+     * @return
+     */
+    @GetMapping("emp/{id}")
+    public Msg getEmp(@PathVariable Integer id){
+        return employeeService.getEmp(id);
+    }
+
+    /**
      * 数据查重
       * @param employee
      * @return true:可用 false:数据重复
      */
     @GetMapping("checkData")
     public boolean checkData(Employee employee){
+        /*判断用户名是否合法
+        String regx = "(^[a-zA-Z0-9_-]{3,16}$)|(^[\\u4e00-\\u9fa5]{2,4})";
+        if(!employee.getName().matches(regx)){
+            return false;
+        }*/
         return employeeService.checkData(employee);
     }
 
     /**
      * 添加员工信息
      * @param employee
+     * @result 数据校验的结果
      * @return
+     * @Valid：对疯转的数据进行校验
      */
     @PostMapping("emp")
-    public Msg saveEmp(Employee employee){
-        Msg msg = employeeService.saveEmp(employee);
-        return msg;
+    public Msg saveEmp(@Valid Employee employee, BindingResult result){
+        if (result.hasErrors()){
+            Map<String,Object> map = new HashMap<>();
+            //校验失败，在页面模态框中显示提示信息
+            List<FieldError> errors = result.getFieldErrors();
+            for (FieldError error : errors) {
+                System.out.println("错误字段名" + error.getField());
+                System.out.println("错误信息" + error.getDefaultMessage());
+                map.put(error.getField(),error.getDefaultMessage());
+            }
+            return Msg.fail().add("errMsg",map);
+        }else{
+            return  employeeService.saveEmp(employee);
+        }
     }
 
 

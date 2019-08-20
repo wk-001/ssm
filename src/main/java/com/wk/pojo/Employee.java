@@ -1,10 +1,15 @@
 package com.wk.pojo;
 
+import javax.validation.constraints.Pattern;
+
 public class Employee {
     private Integer id;
 
+    //自定义jsr303数据校验(正则，提示信息)
+    @Pattern(regexp = "(^[a-zA-Z0-9_-]{3,16}$)|(^[\\u4e00-\\u9fa5]{2,4})",message = "用户名必须是2-4位中文或3-16位英文和数字的组合")
     private String name;
 
+    @Pattern(regexp = "^([A-Za-z0-9_\\-\\.])+\\@([A-Za-z0-9_\\-\\.])+\\.([A-Za-z]{2,4})$",message = "邮箱格式不正确")
     private String email;
 
     private Integer gender;

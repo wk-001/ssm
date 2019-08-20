@@ -18,7 +18,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<Employee> getAll() {
-        return employeeMapper.selectByExampleWithDept(null);
+        EmployeeExample example = new EmployeeExample();
+        example.setOrderByClause("e.id desc");
+        return employeeMapper.selectByExampleWithDept(example);
     }
 
     @Override
@@ -42,5 +44,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         long count = employeeMapper.countByExample(example);
         return count==0;
+    }
+
+    @Override
+    public Msg getEmp(Integer id) {
+        Employee employee = employeeMapper.selectByPrimaryKey(id);
+        if (employee != null) {
+            return Msg.success().add("emp",employee);
+        }
+        return Msg.fail();
+    }
+
+    @Override
+    public Msg updEmp(Employee employee) {
+        int index = employeeMapper.updateByPrimaryKeySelective(employee);
+        if(index>0){
+            return Msg.success();
+        }
+        return Msg.fail();
     }
 }
