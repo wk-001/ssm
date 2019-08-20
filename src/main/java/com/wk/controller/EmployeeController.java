@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,21 @@ public class EmployeeController {
     @Resource
     private EmployeeService employeeService;
 
+    @DeleteMapping("emp/{ids}")
+    public Msg delEmp(@PathVariable String ids){
+        if(ids.contains(",")){
+            List<Integer> delIds = new ArrayList<>();
+            String[] split = ids.split(",");
+            for (String str : split) {
+                delIds.add(Integer.parseInt(str));
+            }
+            return employeeService.delBatch(delIds);
+        }else{
+            int id = Integer.parseInt(ids);
+            return employeeService.delEmp(id);
+        }
+    }
+
     /**
      * 更新员工信息
      * @param employee
@@ -28,9 +44,7 @@ public class EmployeeController {
      */
     @PutMapping("emp/{id}")
     public Msg updEmp(Employee employee){
-        System.out.println("employee = " + employee);
-        Msg msg = employeeService.updEmp(employee);
-        return msg;
+        return employeeService.updEmp(employee);
     }
 
     /**

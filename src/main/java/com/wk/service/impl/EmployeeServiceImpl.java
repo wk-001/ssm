@@ -63,4 +63,25 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         return Msg.fail();
     }
+
+    @Override
+    public Msg delEmp(Integer id) {
+        int index = employeeMapper.deleteByPrimaryKey(id);
+        if(index>0){
+            return Msg.success();
+        }
+        return Msg.fail();
+    }
+
+    @Override
+    public Msg delBatch(List<Integer> ids) {
+        EmployeeExample example = new EmployeeExample();
+        //delete from xxx where id in(x,x,x);
+        example.createCriteria().andIdIn(ids);
+        int index = employeeMapper.deleteByExample(example);
+        if(index>0){
+            return Msg.success();
+        }
+        return Msg.fail();
+    }
 }

@@ -20,6 +20,41 @@
     /*页面加载完成后发送ajax请求获取数据*/
     $(function () {
         to_page(1);
+
+        //全选、全不选
+        $("#check_all").click(function () {
+            $(".check_item").prop("checked",$(this).prop("checked"))
+        })
+
+        $("#delAll").click(function () {
+            var ename = "";
+            var del_id = "";
+            $.each($(".check_item:checked"),function () {
+                //拼接名字
+                ename+=$(this).parents("tr").find("td:eq(2)").text()+",";
+                //拼接ID
+                del_id+=$(this).parents("tr").find("td:eq(1)").text()+",";
+            })
+            //去掉最后一位的逗号
+            enames = ename.substring(0,ename.length-1);
+            del_ids = del_id.substring(0,del_id.length-1);
+            if(confirm("确认删除["+enames+"]吗？")){
+                $.ajax({
+                    url:"<%=basePath%>emp/"+del_ids,
+                    type:"DELETE",
+                    success:function (data) {
+                        alert(data.msg);
+                        to_page(currentPages);
+                    }
+                })
+            }
+        })
+    });
+
+    $(document).on("click",".check_item",function () {
+        //判断当前被选中checkbox的个数
+        var flag = $(".check_item:checked").length==$(".check_item").length;
+        $("#check_all").prop("checked",flag);
     });
 
     //点击页码跳转页面
@@ -42,6 +77,7 @@
     function build_emps_table(data) {
         var emps = data.extend.page.list;
         $.each(emps,function (index, item) {
+            var checkBoxId = $("<td><input type='checkbox' class='check_item'></td>")
             var id = $("<td></td>").append(item.id);
             var name = $("<td></td>").append(item.name);
             var email = $("<td></td>").append(item.email);
@@ -58,7 +94,9 @@
                 .append("删除");
             delBtn.attr("del_id",item.id);
             var btnTd = $("<td></td>").append(editBtn).append("  ").append(delBtn);
-            $("<tr></tr>").append(id)
+            $("<tr></tr>")
+                .append(checkBoxId)
+                .append(id)
                 .append(name)
                 .append(email)
                 .append(gender)
@@ -163,6 +201,23 @@
         });
     });
 
+    //根据ID删除
+    $(document).on("click",".del_btn",function () {
+        //弹出确认删除对话框,父节点的tr节点下的第二个节点是用户名
+        var ename = $(this).parents("tr").find("td:eq(2)").text();
+        if(confirm("确认删除["+ename+"]吗")){
+            $.ajax({
+                url:"<%=basePath%>emp/"+$(this).attr("del_id"),
+                type:"DELETE",
+                success:function (data) {
+                    alert(data.msg);
+                    to_page(currentPages);
+                }
+            })
+        }
+    });
+
+    //修改员工信息的回显
     function getEmp(id) {
         $.get(
             "<%=basePath%>emp/"+id,
@@ -356,6 +411,8 @@
             }
         )*/
     }
+
+
 </script>
 <body>
 
@@ -372,7 +429,7 @@
     <div class="row">
         <div class="col-md-4 col-md-offset-8"> <%--div占4列，偏移8列--%>
             <button class="btn btn-primary" onclick="openAddModel()">新增</button>
-            <button class="btn btn-danger">删除</button>
+            <button class="btn btn-danger" id="delAll">删除</button>
         </div>
     </div>
 
@@ -382,6 +439,7 @@
             <table class="table table-hover" id="emps_table">
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="check_all"></th>
                         <th>id</th>
                         <th>name</th>
                         <th>email</th>

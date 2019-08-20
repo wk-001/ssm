@@ -16,4 +16,9 @@ public interface EmployeeService {
 	Msg getEmp(Integer id);
 
 	Msg updEmp(Employee employee);
+
+    Msg delEmp(Integer id);
+
+    Msg delBatch(List<Integer> ids);
+
 }
